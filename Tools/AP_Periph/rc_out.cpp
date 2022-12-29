@@ -101,6 +101,12 @@ void AP_Periph_FW::rcout_esc(int16_t *rc, uint8_t num_channels)
 
 void AP_Periph_FW::rcout_srv(uint8_t actuator_id, const float command_value)
 {
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    if (actuator_id == g.hbridge_servo_channel) {
+        hbridge.set_target_angle((command_value+1)*45);
+        return;
+    }
+#endif
 #if HAL_PWM_COUNT > 0
     const SRV_Channel::Aux_servo_function_t function = SRV_Channel::Aux_servo_function_t(SRV_Channel::k_rcin1 + actuator_id - 1);
     SRV_Channels::set_output_norm(function, command_value);

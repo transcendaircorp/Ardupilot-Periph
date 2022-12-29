@@ -222,12 +222,16 @@ void AP_Periph_FW::init()
     hwesc_telem.init(hal.serial(3));
 #endif
 
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    hbridge.init();
+#endif
+
 #ifdef HAL_PERIPH_ENABLE_MSP
     if (g.msp_port >= 0) {
         msp_init(hal.serial(g.msp_port));
     }
 #endif
-    
+
 #ifdef HAL_PERIPH_ENABLE_NOTIFY
     notify.init();
 #endif
@@ -376,7 +380,7 @@ void AP_Periph_FW::update()
 #if HAL_GCS_ENABLED
         gcs().send_message(MSG_HEARTBEAT);
         gcs().send_message(MSG_SYS_STATUS);
-#endif    
+#endif
     }
 
     static uint32_t last_error_ms;
@@ -430,6 +434,10 @@ void AP_Periph_FW::update()
 #endif
 
     can_update();
+
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    hbridge.update();
+#endif
 
 #if (defined(HAL_PERIPH_NEOPIXEL_COUNT_WITHOUT_NOTIFY) && HAL_PERIPH_NEOPIXEL_COUNT_WITHOUT_NOTIFY == 8) || defined(HAL_PERIPH_ENABLE_NOTIFY)
     update_rainbow();

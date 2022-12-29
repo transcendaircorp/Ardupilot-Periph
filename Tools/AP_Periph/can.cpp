@@ -108,7 +108,7 @@ static struct instance_t {
 static ioline_t can_term_lines[] = {
 HAL_GPIO_PIN_TERMCAN1
 
-#if HAL_NUM_CAN_IFACES > 2 
+#if HAL_NUM_CAN_IFACES > 2
 #ifdef HAL_GPIO_PIN_TERMCAN2
 ,HAL_GPIO_PIN_TERMCAN2
 #else
@@ -116,7 +116,7 @@ HAL_GPIO_PIN_TERMCAN1
 #endif
 #endif
 
-#if HAL_NUM_CAN_IFACES > 2 
+#if HAL_NUM_CAN_IFACES > 2
 #ifdef HAL_GPIO_PIN_TERMCAN3
 ,HAL_GPIO_PIN_TERMCAN3
 #else
@@ -168,7 +168,7 @@ static instance_t* get_canard_iface_instance(CanardInstance* ins)
     for (auto &can_ins : instances) {
         if (ins == &can_ins.canard) {
             return &can_ins;
-        }   
+        }
     }
     // something is not right if we got here
     return nullptr;
@@ -712,11 +712,11 @@ static void set_rgb_led(uint8_t red, uint8_t green, uint8_t blue)
         dev_toshiba->write_register(TOSHIBA_LED_ENABLE, 0x03);
 
         /* 4-bit for each color */
-        uint8_t val[4] = { 
-            TOSHIBA_LED_PWM0, 
+        uint8_t val[4] = {
+            TOSHIBA_LED_PWM0,
             (uint8_t)(blue >> 4),
-            (uint8_t)(green / 16), 
-            (uint8_t)(red / 16) 
+            (uint8_t)(green / 16),
+            (uint8_t)(red / 16)
         };
         dev_toshiba->transfer(val, sizeof(val), nullptr, 0);
     }
@@ -970,7 +970,7 @@ static void onTransferReceived(CanardInstance* ins,
         break;
 #endif
 #endif
-        
+
 #if defined(AP_PERIPH_HAVE_LED_WITHOUT_NOTIFY) || defined(HAL_PERIPH_ENABLE_NOTIFY)
     case UAVCAN_EQUIPMENT_INDICATION_LIGHTSCOMMAND_ID:
         handle_lightscommand(ins, transfer);
@@ -1074,7 +1074,7 @@ static bool shouldAcceptTransfer(const CanardInstance* ins,
     case UAVCAN_EQUIPMENT_ESC_RAWCOMMAND_ID:
         *out_data_type_signature = UAVCAN_EQUIPMENT_ESC_RAWCOMMAND_SIGNATURE;
         return true;
-    
+
     case UAVCAN_EQUIPMENT_ACTUATOR_ARRAYCOMMAND_ID:
         *out_data_type_signature = UAVCAN_EQUIPMENT_ACTUATOR_ARRAYCOMMAND_SIGNATURE;
         return true;
@@ -1147,7 +1147,7 @@ static void canard_broadcast(uint64_t data_type_signature,
             continue;
         }
 #if defined(HAL_PERIPH_ENABLE_GPS) && HAL_NUM_CAN_IFACES >= 2
-        if (ins.index != periph.gps_mb_can_port) 
+        if (ins.index != periph.gps_mb_can_port)
 #endif
         {
             uint8_t *tid_ptr = get_tid_ptr(&ins, MAKE_TRANSFER_DESCRIPTOR(data_type_signature, data_type_id, 0, CANARD_BROADCAST_NODE_ID));
@@ -1155,7 +1155,7 @@ static void canard_broadcast(uint64_t data_type_signature,
                 return;
             }
 #if DEBUG_PKTS
-            const int16_t res = 
+            const int16_t res =
 #endif
             canardBroadcast(&ins.canard,
                             data_type_signature,
@@ -1240,6 +1240,13 @@ static void processRx(void)
             uint64_t timestamp;
             AP_HAL::CANIface::CanIOFlags flags;
             ins.iface->receive(rxmsg, timestamp, flags);
+            if((rxmsg.id & 0x07FFFFFF) == 0x05041400){
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+                 uint16_t angle = ((uint16_t)(rxmsg.data[6]) << 8) | (uint16_t)(rxmsg.data[7]);
+                 periph.hbridge.set_current_angle((float)angle*0.00549316406f);
+#endif
+                 continue;
+            }
             rx_frame.data_len = AP_HAL::CANFrame::dlcToDataLength(rxmsg.dlc);
             memcpy(rx_frame.data, rxmsg.data, rx_frame.data_len);
 #if HAL_CANFD_SUPPORTED
@@ -1247,7 +1254,7 @@ static void processRx(void)
 #endif
             rx_frame.id = rxmsg.id;
 #if DEBUG_PKTS
-            const int16_t res = 
+            const int16_t res =
 #endif
             canardHandleRxFrame(&ins.canard, &rx_frame, timestamp);
 #if DEBUG_PKTS
@@ -1362,7 +1369,22 @@ static void process1HzTasks(uint64_t timestamp_usec)
     } else
 #endif
     {
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+        switch (periph.hbridge.get_state()) {
+            case AP_HBridge::Success:
+                node_status.mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL;
+                node_status.health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
+                break;
+            case AP_HBridge::Failed:
+                node_status.mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL;
+                node_status.health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_ERROR;
+                break;
+            default:
+                break;
+        }
+#else
         node_status.mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL;
+#endif
     }
 
 #if 0
@@ -1418,7 +1440,7 @@ static bool can_do_dna(instance_t &ins)
 
     static const uint8_t MaxLenOfUniqueIDInRequest = 6;
     uint8_t uid_size = (uint8_t)(sizeof(uavcan_protocol_dynamic_node_id_Allocation::unique_id.data) - ins.node_id_allocation_unique_id_offset);
-    
+
     if (uid_size > MaxLenOfUniqueIDInRequest) {
         uid_size = MaxLenOfUniqueIDInRequest;
     }
@@ -1664,7 +1686,7 @@ void AP_Periph_FW::can_update()
             can_do_dna(ins);
         }
     }
-    
+
     static uint32_t last_1Hz_ms;
     if (now - last_1Hz_ms >= 1000) {
         last_1Hz_ms = now;
@@ -2004,7 +2026,7 @@ void AP_Periph_FW::can_gps_update(void)
         if (gps.horizontal_accuracy(hacc)) {
             pkt.covariance.data[0] = pkt.covariance.data[1] = sq(hacc);
         }
-    
+
         float vacc;
         if (gps.vertical_accuracy(vacc)) {
             pkt.covariance.data[2] = sq(vacc);
@@ -2027,7 +2049,7 @@ void AP_Periph_FW::can_gps_update(void)
                         &buffer[0],
                         total_size);
     }
-    
+
     /*
       send aux packet
      */
@@ -2110,7 +2132,7 @@ void AP_Periph_FW::send_moving_baseline_msg()
                        ,canfdout()
 #endif
                         );
-    } else 
+    } else
 #endif
     {
         canard_broadcast(ARDUPILOT_GNSS_MOVINGBASELINEDATA_SIGNATURE,

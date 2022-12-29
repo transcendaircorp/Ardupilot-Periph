@@ -96,7 +96,7 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
     // @User: Advanced
     // @RebootRequired: True
     GARRAY(can_protocol,     0, "CAN_PROTOCOL", AP_CANManager::Driver_Type_UAVCAN),
-    
+
     // @Param: CAN2_BAUDRATE
     // @DisplayName: Bitrate of CAN2 interface
     // @Description: Bit rate can be set up to from 10000 to 1000000
@@ -292,7 +292,7 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
     // @Increment: 1
     // @User: Advanced
     GSCALAR(rangefinder_max_rate, "RNGFND_MAX_RATE", 50),
-    
+
     // Rangefinder driver
     // @Group: RNGFND
     // @Path: ../libraries/AP_RangeFinder/AP_RangeFinder.cpp
@@ -371,6 +371,21 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
 #endif
 #endif
 
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    // HBridge driver
+    // @Group: HBRIDGE
+    // @Path: ../libraries/AP_HBridge/AP_HBridge.cpp
+    GOBJECT(hbridge, "HBRIDGE", AP_HBridge),
+
+    // @Param: HBRIDGE_SRV_CHAN
+    // @DisplayName: H-Bridge Servo Number
+    // @Description: This is the servo number that is used to control the H-Bridge.
+    // @Range: 0 255
+    // @Increment: 1
+    // @User: Advanced
+    GSCALAR(hbridge_servo_channel, "HBRIDGE_SRV_CHAN", 0),
+#endif
+
 #ifdef HAL_PERIPH_ENABLE_MSP
     // @Param: MSP_PORT
     // @DisplayName: MSP Serial Port
@@ -381,7 +396,7 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
     // @RebootRequired: True
     GSCALAR(msp_port, "MSP_PORT", AP_PERIPH_MSP_PORT_DEFAULT),
 #endif
-    
+
 #ifdef HAL_PERIPH_ENABLE_NOTIFY
     // @Group: NTF_
     // @Path: ../libraries/AP_Notify/AP_Notify.cpp

@@ -59,11 +59,13 @@ public:
         k_param_efi,
         k_param_efi_port,
         k_param_efi_baudrate,
+        k_param_hbridge,
+        k_param_hbridge_servo_channel
     };
 
     AP_Int16 format_version;
     AP_Int16 can_node;
-    
+
     AP_Int32 can_baudrate[HAL_NUM_CAN_IFACES];
 #if HAL_NUM_CAN_IFACES >= 2
     AP_Enum<AP_CANManager::Driver_Type> can_protocol[HAL_NUM_CAN_IFACES];
@@ -102,6 +104,10 @@ public:
     AP_Int8 esc_number;
 #endif
 
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    AP_Int8 hbridge_servo_channel;
+#endif
+
 #ifdef HAL_PERIPH_ENABLE_GPS
     AP_Int8 gps_port;
 #if GPS_MOVING_BASELINE
@@ -136,7 +142,7 @@ public:
     AP_Int32 efi_baudrate;
     AP_Int8 efi_port;
 #endif
-    
+
 #if HAL_CANFD_SUPPORTED
     AP_Int8 can_fdmode;
     AP_Int8 can_fdbaudrate[HAL_NUM_CAN_IFACES];

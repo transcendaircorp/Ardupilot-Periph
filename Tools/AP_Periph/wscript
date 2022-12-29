@@ -15,7 +15,7 @@ try:
 except ImportError:
     print("you need to install pexpect with 'python -m pip install pexpect'")
     sys.exit(1)
-    
+
 
 def build(bld):
     targets = bld.ap_periph_boards()
@@ -46,6 +46,7 @@ def build(bld):
                      'AP_RTC',
                      'AP_Compass',
                      'AP_Baro',
+                     'AP_HBridge',
                      'Filter',
                      'AP_InternalError',
                      'AP_Airspeed',
@@ -78,7 +79,7 @@ def build(bld):
     # build external libcanard library
     bld.stlib(source=['../../modules/DroneCAN/libcanard/canard.c'] +
                      bld.bldnode.ant_glob('modules/DroneCAN/libcanard/dsdlc_generated/src/**.c'),
-              includes=[bld.env.SRCROOT + '/modules/DroneCAN/libcanard', 
+              includes=[bld.env.SRCROOT + '/modules/DroneCAN/libcanard',
                         bld.env.BUILDROOT + '/modules/DroneCAN/libcanard/dsdlc_generated/include'],
               target='libcanard')
 
