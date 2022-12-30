@@ -74,6 +74,9 @@ void AP_HBridge::init()
 
 void AP_HBridge::update()
 {
+    hal.gpio->write(3, 1);
+    hal.gpio->write(4, 1);
+    hal.gpio->write(5, 0);
     uint32_t now = AP_HAL::native_millis();
     if(_debug && (now - _since_last_debug) >= 1000/_debug_rate) {
         _since_last_debug += 1000/_debug_rate;
