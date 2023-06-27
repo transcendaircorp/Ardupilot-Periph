@@ -28,19 +28,29 @@ const AP_Param::GroupInfo AP_HBridge::var_info[] = {
     // @RebootRequired: True
     AP_GROUPINFO("_REVERSE", 1, AP_HBridge, _reverse, 0),
 
+    // @Param: _TARGET
+    // @DisplayName: H-Bridge Target Throw
+    // @Description: Target throw for the angle sensor
+    // @Range: 0 359
+    // @Units: deg
+    // @Increment: 1
+    // @User: Standard
+    // @RebootRequired: True
+    AP_GROUPINFO("_TARGET", 2, AP_HBridge, _target_throw, 90),
+
     // @Param: _DEBUG
     // @DisplayName: H-Bridge Debug
     // @Description: Allows the H-Bridge to be debugged
     // @Values: 0:Disabled,1:Enabled
     // @User: Standard
-    AP_GROUPINFO("_DEBUG", 2, AP_HBridge, _debug, 0),
+    AP_GROUPINFO("_DEBUG", 3, AP_HBridge, _debug, 0),
 
     // @Param: _DBG_RATE
     // @DisplayName: H-Bridge Debug Rate
     // @Description: Allows the H-Bridge to be debugged at a rate
     // @Values: 0:Disabled,1:Enabled
     // @User: Standard
-    AP_GROUPINFO("_DBG_RATE", 3, AP_HBridge, _debug_rate, 1),
+    AP_GROUPINFO("_DBG_RATE", 4, AP_HBridge, _debug_rate, 1),
 
     // @Param: _TIMEOUT
     // @DisplayName: H-Bridge Calibration Timeout
@@ -50,7 +60,7 @@ const AP_Param::GroupInfo AP_HBridge::var_info[] = {
     // @Increment: 1
     // @User: Standard
     // @RebootRequired: True
-    AP_GROUPINFO("_TIMEOUT", 4, AP_HBridge, _calibration_timeout, 15),
+    AP_GROUPINFO("_TIMEOUT", 5, AP_HBridge, _calibration_timeout, 15),
 
     AP_GROUPEND
 };
@@ -153,9 +163,9 @@ void AP_HBridge::update()
         } case Calibrating: {
             bool vertGThorz = _vertical_angle < _horizontal_angle;
             float angle_diff = abs(_vertical_angle - _horizontal_angle);
-            if(abs(angle_diff - 90) < 10 ) { //if the difference is about 90
+            if(abs(angle_diff - _target_throw) < 10 ) { //if the difference is about _target_throw
                 _direction = vertGThorz;
-            } else if(abs(angle_diff - 270) < 10 ) { //if the difference is about 270, it has wrapped around, so we need to invert the vertGThorz
+            } else if(abs(angle_diff - (360-_target_throw)) < 10 ) { //if the difference is about 270, it has wrapped around, so we need to invert the vertGThorz
                 _direction = !vertGThorz;
             } else { // if the angle is not near 90 or 270, calibration failed
                 _calibrated = Failed;

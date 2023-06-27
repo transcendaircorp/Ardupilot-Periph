@@ -63,6 +63,7 @@ private:
     // Parameters
     AP_Int8     _enabled;             // 1 if H-bridge is enabled
     AP_Int8     _reverse;             // 1 if H-bridge is reversed
+    AP_Int16    _target_throw;        // target throw for calibration
     AP_Int8     _calibration_timeout; // timeout for calibration
     AP_Int8     _debug;               // 1 if debug is enabled
     AP_Int8     _debug_rate;          // debug rate in Hz
