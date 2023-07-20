@@ -60,7 +60,8 @@ public:
         k_param_efi_port,
         k_param_efi_baudrate,
         k_param_hbridge,
-        k_param_hbridge_servo_channel
+        k_param_hbridge_servo_channel,
+        k_param_angleservo,
     };
 
     AP_Int16 format_version;

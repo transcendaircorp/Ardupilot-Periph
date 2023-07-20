@@ -386,6 +386,13 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
     GSCALAR(hbridge_servo_channel, "HBRIDGE_SRV_CHAN", 0),
 #endif
 
+#ifdef HAL_PERIPH_ENABLE_ANGLESERVO
+    // AngleServo driver
+    // @Group: ANG_SRV
+    // @Path: ../libraries/AP_AngleServo/AP_AngleServo.cpp
+    GOBJECT(angleservo, "ANG_SRV", AngleServo),
+#endif
+
 #ifdef HAL_PERIPH_ENABLE_MSP
     // @Param: MSP_PORT
     // @DisplayName: MSP Serial Port

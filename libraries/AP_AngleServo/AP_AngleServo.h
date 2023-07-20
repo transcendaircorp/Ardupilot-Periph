@@ -1,18 +1,43 @@
 #pragma once
 
-#include <AP_HAL/I2CDevice.h>
+#include <AP_Common/AP_Common.h>
+#include "AngleServoController.h"
+#include "A1335.h"
 
-class AP_AngleServo {
-
+class AngleServoFunction
+{
 public:
-    // run all the control loops for the servos. Should be called as fast as possible from the main loop, at least 20Hz
-    void update(void);
-    static AP_AngleServo *get_singleton(void) { return _singleton; }
-}
-
 };
 
+class AngleServo
+{
+public:
+    AngleServo();
 
-namespace AP {
-    AP_AngleServo *angleservo();
+    /* Do not allow copies */
+    AngleServo(const AngleServo&) = delete;
+    AngleServo &operator=(const AngleServo&) = delete;
+
+    // initialise the servos
+    void init();
+    // run all the control loops for the servos. Should be called as fast as possible from the main loop, at least 20Hz
+    void update();
+    // set the output value for a servo
+    void rcout_srv(uint8_t actuator_id, const float command_value);
+    static AngleServo *get_singleton()
+    {
+        return _singleton;
+    }
+    static const struct AP_Param::GroupInfo var_info[];
+private:
+    static AngleServo *_singleton;
+
+    AngleServoController _angle_servos[16];
+
+    uint32_t _since_last_debug;
+};
+
+namespace AP
+{
+AngleServo *angleservo();
 }

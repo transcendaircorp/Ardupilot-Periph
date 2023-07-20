@@ -5,6 +5,7 @@
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Compass/AP_Compass.h>
 #include <AP_Baro/AP_Baro.h>
+#include <AP_AngleServo/AP_AngleServo.h>
 #include <AP_HBridge/AP_HBridge.h>
 #include "SRV_Channel/SRV_Channel.h"
 #include <AP_Notify/AP_Notify.h>
@@ -212,6 +213,13 @@ public:
     #error "HAL_PERIPH_ENABLE_HBRIDGE requires HAL_PERIPH_ENABLE_RC_OUT"
 #endif
     AP_HBridge hbridge;
+#endif
+
+#ifdef HAL_PERIPH_ENABLE_ANGLESERVO
+#ifndef HAL_PERIPH_ENABLE_RC_OUT
+    #error "HAL_PERIPH_ENABLE_ANGLESERVO requires HAL_PERIPH_ENABLE_RC_OUT"
+#endif
+    AngleServo angleservo;
 #endif
 
 #ifdef HAL_PERIPH_ENABLE_RC_OUT

@@ -801,7 +801,11 @@ static void handle_act_command(CanardInstance* ins, CanardRxTransfer* transfer)
             // this is the only type we support
             continue;
         }
+#ifdef HAL_PERIPH_ENABLE_ANGLESERVO
+        periph.angleservo.rcout_srv(data[i].actuator_id, data[i].command_value);
+#else
         periph.rcout_srv(data[i].actuator_id, data[i].command_value);
+#endif 
     }
 }
 #endif // HAL_PERIPH_ENABLE_RC_OUT

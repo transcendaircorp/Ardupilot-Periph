@@ -47,6 +47,7 @@ def build(bld):
                      'AP_Compass',
                      'AP_Baro',
                      'AP_HBridge',
+                     'AP_AngleServo',
                      'Filter',
                      'AP_InternalError',
                      'AP_Airspeed',
