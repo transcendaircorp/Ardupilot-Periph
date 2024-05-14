@@ -220,6 +220,7 @@ public:
     #error "HAL_PERIPH_ENABLE_ANGLESERVO requires HAL_PERIPH_ENABLE_RC_OUT"
 #endif
     AngleServo angleservo;
+    void servo_telem_update();
 #endif
 
 #ifdef HAL_PERIPH_ENABLE_RC_OUT

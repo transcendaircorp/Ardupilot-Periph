@@ -192,7 +192,6 @@ class Sensor : public virtual AngleSensor
 public:
     Sensor(uint8_t address) : _address(address) {}
     bool init() override;
-    void actuator_id(uint8_t actuator_id) override;
     float get_angle() override;
     uint8_t get_sensor_id() override
     {
@@ -202,7 +201,6 @@ public:
     HAL_Semaphore sem;
 private:
     AP_HAL::OwnPtr<AP_HAL::I2CDevice> _dev;
-    uint8_t _actuator_id;
     uint8_t _address;
 
     float  _last_angle = 0;

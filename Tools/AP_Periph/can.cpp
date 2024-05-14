@@ -802,13 +802,27 @@ static void handle_act_command(CanardInstance* ins, CanardRxTransfer* transfer)
             continue;
         }
 #ifdef HAL_PERIPH_ENABLE_ANGLESERVO
-        periph.angleservo.rcout_srv(data[i].actuator_id, data[i].command_value);
-#else
+        if (periph.angleservo.rcout_srv(data[i].actuator_id, data[i].command_value)) {
+            continue;
+        }
+#endif
         periph.rcout_srv(data[i].actuator_id, data[i].command_value);
-#endif 
     }
 }
 #endif // HAL_PERIPH_ENABLE_RC_OUT
+
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+static void handle_esc_status(CanardInstance* ins, CanardRxTransfer* transfer)
+{
+    uavcan_equipment_esc_Status req;
+    if (uavcan_equipment_esc_Status_decode(transfer, &req)) {
+        return;
+    }
+    if (req.esc_index == periph.g.hbridge_servo_channel) {
+        periph.hbridge.set_current_angle(req.voltage);
+    }
+}
+#endif
 
 #if defined(HAL_PERIPH_ENABLE_NOTIFY)
 static void handle_notify_state(CanardInstance* ins, CanardRxTransfer* transfer)
@@ -990,6 +1004,11 @@ static void onTransferReceived(CanardInstance* ins,
         handle_act_command(ins, transfer);
         break;
 #endif
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    case UAVCAN_EQUIPMENT_ESC_STATUS_ID:
+        handle_esc_status(ins, transfer);
+        break;
+#endif
 
 #ifdef HAL_PERIPH_ENABLE_NOTIFY
     case ARDUPILOT_INDICATION_NOTIFYSTATE_ID:
@@ -1081,6 +1100,11 @@ static bool shouldAcceptTransfer(const CanardInstance* ins,
 
     case UAVCAN_EQUIPMENT_ACTUATOR_ARRAYCOMMAND_ID:
         *out_data_type_signature = UAVCAN_EQUIPMENT_ACTUATOR_ARRAYCOMMAND_SIGNATURE;
+        return true;
+#endif
+#ifdef HAL_PERIPH_ENABLE_HBRIDGE
+    case UAVCAN_EQUIPMENT_ESC_STATUS_ID:
+        *out_data_type_signature = UAVCAN_EQUIPMENT_ESC_STATUS_SIGNATURE;
         return true;
 #endif
 #if defined(HAL_PERIPH_ENABLE_NOTIFY)
@@ -1244,13 +1268,6 @@ static void processRx(void)
             uint64_t timestamp;
             AP_HAL::CANIface::CanIOFlags flags;
             ins.iface->receive(rxmsg, timestamp, flags);
-            if((rxmsg.id & 0x07FFFFFF) == 0x05041400){
-#ifdef HAL_PERIPH_ENABLE_HBRIDGE
-                 uint16_t angle = ((uint16_t)(rxmsg.data[6]) << 8) | (uint16_t)(rxmsg.data[7]);
-                 periph.hbridge.set_current_angle((float)angle*0.00549316406f);
-#endif
-                 continue;
-            }
             rx_frame.data_len = AP_HAL::CANFrame::dlcToDataLength(rxmsg.dlc);
             memcpy(rx_frame.data, rxmsg.data, rx_frame.data_len);
 #if HAL_CANFD_SUPPORTED
@@ -1659,6 +1676,44 @@ void AP_Periph_FW::esc_telem_update()
     }
 }
 #endif // HAL_WITH_ESC_TELEM
+#ifdef HAL_PERIPH_ENABLE_ANGLESERVO
+/*
+  send servo status packets based on AP_ESC_Telem
+ */
+void AP_Periph_FW::servo_telem_update() {
+    static uint32_t last_update_ms;
+    uint32_t now_ms = AP_HAL::millis();
+    if (now_ms - last_update_ms <= 20) { // 50Hz
+        return;
+    }
+    last_update_ms = now_ms;
+    const float nan = nanf("");
+    constexpr auto LEN = sizeof(periph.angleservo.controllers)/sizeof(periph.angleservo.controllers[0]);
+
+    for (uint8_t i = 0; i < LEN; i++) {
+        auto &controller = periph.angleservo.controllers[i];
+        if (!controller.is_valid()) {
+            continue;
+        }
+        uavcan_equipment_esc_Status pkt {
+            .error_count=0,
+            .voltage=controller.get_angle(),
+            .current=nan,
+            .temperature=nan,
+            .rpm=0,
+            .power_rating_pct=0,
+            .esc_index=controller.get_actuator_id()
+        };
+        uint8_t buffer[UAVCAN_EQUIPMENT_ESC_STATUS_MAX_SIZE] {};
+        uint16_t total_size = uavcan_equipment_esc_Status_encode(&pkt, buffer, !periph.canfdout());
+        canard_broadcast(UAVCAN_EQUIPMENT_ESC_STATUS_SIGNATURE,
+                         UAVCAN_EQUIPMENT_ESC_STATUS_ID,
+                         CANARD_TRANSFER_PRIORITY_LOW,
+                         &buffer[0],
+                         total_size);
+    }
+}
+#endif // HAL_PERIPH_ENABLE_ANGLESERVO
 #endif // HAL_PERIPH_ENABLE_RC_OUT
 
 
@@ -1727,6 +1782,9 @@ void AP_Periph_FW::can_update()
     #endif
     #ifdef HAL_PERIPH_ENABLE_RC_OUT
         rcout_update();
+    #endif
+    #ifdef HAL_PERIPH_ENABLE_ANGLESERVO
+        servo_telem_update();
     #endif
     #ifdef HAL_PERIPH_ENABLE_EFI
         can_efi_update();

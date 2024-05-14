@@ -30,11 +30,6 @@ void Sensor::timer()
     _last_angle = angle;
 }
 
-void Sensor::actuator_id(uint8_t actuator_id)
-{
-    _actuator_id = actuator_id;
-}
-
 float Sensor::get_angle()
 {
     WITH_SEMAPHORE(sem);

@@ -17,16 +17,16 @@ extern const AP_HAL::HAL &hal;
 const AP_Param::GroupInfo AngleServo::var_info[] = {
     // @Group: 1
     // @Path: AngleServoController.cpp
-    AP_SUBGROUPINFO(_angle_servos[0], "1", 1, AngleServo, AngleServoController),
+    AP_SUBGROUPINFO(controllers[0], "1", 1, AngleServo, AngleServoController),
     // @Group: 2
     // @Path: AngleServoController.cpp
-    AP_SUBGROUPINFO(_angle_servos[1], "2", 2, AngleServo, AngleServoController),
+    AP_SUBGROUPINFO(controllers[1], "2", 2, AngleServo, AngleServoController),
     // @Group: 3
     // @Path: AngleServoController.cpp
-    AP_SUBGROUPINFO(_angle_servos[2], "3", 3, AngleServo, AngleServoController),
+    AP_SUBGROUPINFO(controllers[2], "3", 3, AngleServo, AngleServoController),
     // @Group: 4
     // @Path: AngleServoController.cpp
-    AP_SUBGROUPINFO(_angle_servos[3], "4", 4, AngleServo, AngleServoController),
+    AP_SUBGROUPINFO(controllers[3], "4", 4, AngleServo, AngleServoController),
 
     AP_GROUPEND
 };
@@ -34,18 +34,14 @@ const AP_Param::GroupInfo AngleServo::var_info[] = {
 AngleServo::AngleServo()
 {
     if (_singleton != nullptr) {
-        AP_HAL::panic("AP_Airspeed must be singleton");
+        AP_HAL::panic("AP_AngleServo must be singleton");
     }
     _singleton = this;
-    for (int i = 0; i < sizeof(_angle_servos)/sizeof(_angle_servos[0]); i++) {
-        _angle_servos[i]._actuator_id = i;
-        _angle_servos[i]._actuator_func = SRV_Channel::Aux_servo_function_t(SRV_Channel::k_rcin1 + i);
-    }
 }
 
 void AngleServo::init()
 {
-    for (auto &angleServo : _angle_servos) {
+    for (auto &angleServo : controllers) {
         angleServo.init();
     }
 }
@@ -61,22 +57,23 @@ void AngleServo::update()
         _since_last_debug += 250;
         debug = true;
     }
-    for (auto &angleServo : _angle_servos) {
-        angleServo.update();
-        if (angleServo._sensor->get_sensor_id() == 0) {
+    for (auto &controller : controllers) {
+        if (!controller.is_valid())
             continue;
-        }
+        controller.update();
         if (debug) {
             Debug("sensor id: %d, angle: %f, target angle: %f, output value: %f\n",
-                  angleServo._sensor->get_sensor_id(),
-                  angleServo.get_angle(),
-                  angleServo.get_target_angle(),
-                  angleServo._output_value);
+                  controller._sensor->get_sensor_id(),
+                  controller.get_angle(),
+                  controller.get_target_angle(),
+                  controller._output_value);
         }
     }
     // set the output values for the servos
-    for (auto &angleServo : _angle_servos) {
-        SRV_Channels::set_output_norm(angleServo._actuator_func, angleServo._output_value);
+    for (auto &controller : controllers) {
+        SRV_Channels::set_output_norm(
+            SRV_Channel::Aux_servo_function_t(SRV_Channel::k_rcin1 + controller._actuator_id - 1),
+            controller._output_value);
     }
     SRV_Channels::calc_pwm();
     SRV_Channels::cork();
@@ -84,10 +81,17 @@ void AngleServo::update()
     SRV_Channels::push();
 }
 
-void AngleServo::rcout_srv(uint8_t actuator_id, const float command_value)
+bool AngleServo::rcout_srv(uint8_t actuator_id, const float command_value)
 {
-    _angle_servos[actuator_id]._command_value = command_value;
+    for (auto &controller : controllers) {
+        if (controller._actuator_id == actuator_id) {
+            controller._command_value = command_value;
+            return true;
+        }
+    }
+    return false;
 }
+
 
 // singleton instance
 AngleServo *AngleServo::_singleton;

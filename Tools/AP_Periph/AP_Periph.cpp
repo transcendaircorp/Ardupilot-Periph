@@ -444,12 +444,7 @@ void AP_Periph_FW::update()
 #endif
 
 #ifdef HAL_PERIPH_ENABLE_ANGLESERVO
-    static uint32_t angleservo_last_update_ms;
-    if (now - angleservo_last_update_ms >= 20) {
-        // update at 50Hz
-        angleservo_last_update_ms = now;
-        angleservo.update();
-    }
+    angleservo.update();
 #endif
 
 #if (defined(HAL_PERIPH_NEOPIXEL_COUNT_WITHOUT_NOTIFY) && HAL_PERIPH_NEOPIXEL_COUNT_WITHOUT_NOTIFY == 8) || defined(HAL_PERIPH_ENABLE_NOTIFY)

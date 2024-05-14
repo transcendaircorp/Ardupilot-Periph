@@ -23,16 +23,15 @@ public:
     // run all the control loops for the servos. Should be called as fast as possible from the main loop, at least 20Hz
     void update();
     // set the output value for a servo
-    void rcout_srv(uint8_t actuator_id, const float command_value);
+    bool rcout_srv(uint8_t actuator_id, const float command_value);
     static AngleServo *get_singleton()
     {
         return _singleton;
     }
+    AngleServoController controllers[4];
     static const struct AP_Param::GroupInfo var_info[];
 private:
     static AngleServo *_singleton;
-
-    AngleServoController _angle_servos[16];
 
     uint32_t _since_last_debug;
 };
