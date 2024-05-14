@@ -26,6 +26,11 @@ const AP_Param::GroupInfo AngleServoController::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("_ACT", 3, AngleServoController, _actuator_id, 0),
+    // @Param: _DEBUG
+    // @DisplayName: Debug output
+    // @Values: 0:Disabled,1:Enabled
+    // @User: Standard
+    AP_GROUPINFO("_DEBUG", 4, AngleServoController, _debug, 0),
     AP_GROUPEND
 };
 

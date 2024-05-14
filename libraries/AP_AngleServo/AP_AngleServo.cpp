@@ -58,7 +58,7 @@ void AngleServo::update()
         debug = true;
     }
     for (auto &controller : controllers) {
-        if (!controller.is_valid())
+        if (!controller.is_valid() || controller._debug == 0)
             continue;
         controller.update();
         if (debug) {

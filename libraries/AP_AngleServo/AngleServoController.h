@@ -19,6 +19,7 @@ private:
     AP_Int8 _actuator_id;
     AP_Float _angle_offset;
     AP_Int8 _reverse;
+    AP_Int8 _debug;
     AP_Float _prop_gain;
     AP_Float _int_gain;
     AP_Float _diff_gain;
