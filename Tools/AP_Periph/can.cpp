@@ -818,7 +818,7 @@ static void handle_esc_status(CanardInstance* ins, CanardRxTransfer* transfer)
     if (uavcan_equipment_esc_Status_decode(transfer, &req)) {
         return;
     }
-    if (req.esc_index == periph.g.hbridge_servo_channel) {
+    if (req.esc_index + 1 == periph.g.hbridge_servo_channel) {
         periph.hbridge.set_current_angle(req.voltage);
     }
 }
@@ -1704,6 +1704,7 @@ void AP_Periph_FW::servo_telem_update() {
             .power_rating_pct=0,
             .esc_index=controller.get_actuator_id()
         };
+        pkt.esc_index -= 1;
         uint8_t buffer[UAVCAN_EQUIPMENT_ESC_STATUS_MAX_SIZE] {};
         uint16_t total_size = uavcan_equipment_esc_Status_encode(&pkt, buffer, !periph.canfdout());
         canard_broadcast(UAVCAN_EQUIPMENT_ESC_STATUS_SIGNATURE,

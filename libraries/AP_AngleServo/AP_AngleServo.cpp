@@ -58,10 +58,9 @@ void AngleServo::update()
         debug = true;
     }
     for (auto &controller : controllers) {
-        if (!controller.is_valid() || controller._debug == 0)
-            continue;
-        controller.update();
-        if (debug) {
+        if (controller.is_valid())
+            controller.update();
+        if (debug && controller._debug) {
             Debug("sensor id: %d, angle: %f, target angle: %f, output value: %f\n",
                   controller._sensor->get_sensor_id(),
                   controller.get_angle(),
